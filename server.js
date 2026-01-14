@@ -46,11 +46,6 @@ const corsOptions = {
 
 app.use(cors(corsOptions));
 
-// Handle preflight requests explicitly
-app.options('*', cors(corsOptions), (req, res) => {
-  res.sendStatus(200);
-});
-
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 
@@ -160,12 +155,83 @@ const generateEmailHTML = (data) => {
 };
 
 // API Routes
-// Handle preflight requests for the send-email endpoint
+// Handle preflight requests for both endpoints
 app.options('/api/send-email', cors(corsOptions), (req, res) => {
   res.sendStatus(200);
 });
 
+app.options('/send-email', cors(corsOptions), (req, res) => {
+  res.sendStatus(200);
+});
+
 app.post('/api/send-email', async (req, res) => {
+  try {
+    const {
+      to,
+      subject,
+      message,
+      from,
+      name,
+      phone,
+      fields,
+      html
+    } = req.body;
+
+    // Basic validation
+    if (!subject) {
+      return res.status(400).json({
+        success: false,
+        error: 'Subject is required'
+      });
+    }
+
+    if (!message && !html) {
+      return res.status(400).json({
+        success: false,
+        error: 'Message or HTML content is required'
+      });
+    }
+
+    // Prepare email data
+    const emailData = {
+      subject,
+      from: from || 'noreply@ado-egy.com',
+      replyTo: from,
+      html: html || generateEmailHTML({
+        subject,
+        message,
+        from,
+        fields: fields || [
+          name && { label: 'Name', value: name },
+          from && { label: 'Email', value: from },
+          phone && { label: 'Phone', value: phone }
+        ].filter(Boolean)
+      })
+    };
+
+    // Send email
+    const result = await sendEmail(emailData);
+
+    console.log('Email sent successfully:', result.messageId);
+
+    res.json({
+      success: true,
+      message: 'Email sent successfully',
+      messageId: result.messageId
+    });
+
+  } catch (error) {
+    console.error('Email sending error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to send email',
+      details: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
+  }
+});
+
+// Alternative endpoint without /api prefix (for frontend compatibility)
+app.post('/send-email', async (req, res) => {
   try {
     const {
       to,
