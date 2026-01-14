@@ -17,7 +17,38 @@ const PORT = process.env.PORT || 3001;
 
 // Middleware
 app.use(helmet());
-app.use(cors());
+
+// CORS configuration for Vercel deployment
+const corsOptions = {
+  origin: function (origin, callback) {
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+
+    const allowedOrigins = [
+      'http://localhost:5173', // Local development
+      'http://localhost:3000', // Alternative local port
+      'https://ado-consult.vercel.app', // Replace with your actual frontend domain
+      'https://ado-egy.com'
+      // Add your production frontend URL here when deployed
+    ];
+
+    if (allowedOrigins.indexOf(origin) !== -1) {
+      callback(null, true);
+    } else {
+      callback(null, true); // Allow all origins for now (you can restrict this later)
+    }
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'Origin', 'X-Requested-With'],
+  optionsSuccessStatus: 200 // Some legacy browsers choke on 204
+};
+
+app.use(cors(corsOptions));
+
+// Handle preflight requests explicitly
+app.options('*', cors(corsOptions));
+
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 
@@ -127,6 +158,9 @@ const generateEmailHTML = (data) => {
 };
 
 // API Routes
+// Handle preflight requests for the send-email endpoint
+app.options('/api/send-email', cors(corsOptions));
+
 app.post('/api/send-email', async (req, res) => {
   try {
     const {
