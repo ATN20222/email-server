@@ -47,7 +47,9 @@ const corsOptions = {
 app.use(cors(corsOptions));
 
 // Handle preflight requests explicitly
-app.options('*', cors(corsOptions));
+app.options('*', cors(corsOptions), (req, res) => {
+  res.sendStatus(200);
+});
 
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
@@ -159,7 +161,9 @@ const generateEmailHTML = (data) => {
 
 // API Routes
 // Handle preflight requests for the send-email endpoint
-app.options('/api/send-email', cors(corsOptions));
+app.options('/api/send-email', cors(corsOptions), (req, res) => {
+  res.sendStatus(200);
+});
 
 app.post('/api/send-email', async (req, res) => {
   try {
