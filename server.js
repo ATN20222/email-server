@@ -260,10 +260,15 @@ app.use((error, req, res, next) => {
   });
 });
 
-// Start server
-app.listen(PORT, () => {
-  console.log(`🚀 ADO Email Service running on port ${PORT}`);
-  console.log(`📧 From: ${process.env.FROM_EMAIL}`);
-  console.log(`📧 To: ${process.env.TO_EMAIL}`);
-  console.log(`🌐 Health check: http://localhost:${PORT}/health`);
-});
+// Export for Vercel deployment
+export default app;
+
+// Start server only when not on Vercel
+if (process.env.NODE_ENV !== 'production') {
+  app.listen(PORT, () => {
+    console.log(`🚀 ADO Email Service running on port ${PORT}`);
+    console.log(`📧 From: ${process.env.FROM_EMAIL}`);
+    console.log(`📧 To: ${process.env.TO_EMAIL}`);
+    console.log(`🌐 Health check: http://localhost:${PORT}/health`);
+  });
+}
