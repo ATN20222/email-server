@@ -136,7 +136,7 @@ export default async function handler(req, res) {
 
     // Prepare email data
     const emailData = {
-      from: `"ADO Engineering" <${process.env.FROM_EMAIL}>`,
+      from: `"ADO Consult" <${process.env.FROM_EMAIL}>`,
       to: process.env.TO_EMAIL,
       subject,
       html: html || generateEmailHTML({
